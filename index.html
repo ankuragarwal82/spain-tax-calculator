@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spain Beckham Law Tax Calculator 2026</title>
+    <title>Spain Tax Optimizer 2026</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -16,22 +16,22 @@
     <div class="max-w-4xl mx-auto px-4 py-12">
         <header class="text-center mb-12">
             <h1 class="text-4xl font-bold text-white mb-4">Spain Tax Optimizer 2026</h1>
-            <p class="text-slate-400">Compare the <strong>Beckham Law (24% Flat)</strong> vs. the <strong>Standard Progressive Regime</strong>.</p>
+            <p class="text-slate-400 text-lg">Compare the <strong>Beckham Law (24% Flat)</strong> vs. the <strong>Standard Progressive Regime</strong>.</p>
         </header>
 
         <div class="grid md:grid-cols-2 gap-8">
             <div class="glass p-8 rounded-2xl">
-                <h2 class="text-xl font-semibold mb-6 text-blue-400">Your Details</h2>
+                <h2 class="text-xl font-semibold mb-6 text-blue-400 border-b border-white/10 pb-2">Your Details</h2>
                 
                 <div class="mb-6">
                     <label class="block text-sm font-medium mb-2">Annual Gross Salary (€)</label>
-                    <input type="number" id="salary" value="75000" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    <input type="number" id="salary" value="75000" oninput="calculateTax()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
                 </div>
 
                 <div class="mb-6">
                     <label class="block text-sm font-medium mb-2">Foreign Dividends/Rental Income (€)</label>
-                    <input type="number" id="foreignIncome" value="0" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none transition">
-                    <p class="text-xs text-slate-500 mt-2">Under Beckham Law, foreign passive income is 0% taxed in Spain.</p>
+                    <input type="number" id="foreignIncome" value="0" oninput="calculateTax()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    <p class="text-xs text-slate-500 mt-2 italic">Note: Under Beckham Law, foreign passive income is generally 0% taxed in Spain.</p>
                 </div>
 
                 <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
@@ -41,42 +41,148 @@
                 </div>
             </div>
 
-            <div class="glass p-8 rounded-2xl">
-                <h2 class="text-xl font-semibold mb-6 text-green-400">The Verdict</h2>
-                <div id="verdict" class="text-2xl font-bold mb-4">--</div>
-                
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <span>Standard Take-home:</span>
-                        <span id="stdNet" class="font-mono">€0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Beckham Take-home:</span>
-                        <span id="beckNet" class="font-mono">€0</span>
-                    </div>
-                    <div class="pt-4 border-t border-slate-700 flex justify-between text-xl text-white font-bold">
-                        <span>Annual Savings:</span>
-                        <span id="savings" class="text-green-400">€0</span>
+            <div class="glass p-8 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold mb-6 text-green-400 border-b border-white/10 pb-2">The Verdict</h2>
+                    <div id="verdict" class="text-2xl font-bold mb-6">Calculating...</div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Standard Take-home:</span>
+                            <span id="stdNet" class="font-mono font-bold">€0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Beckham Take-home:</span>
+                            <span id="beckNet" class="font-mono font-bold">€0</span>
+                        </div>
+                        <div class="pt-4 border-t border-slate-700 flex justify-between text-xl text-white font-bold">
+                            <span>Annual Savings:</span>
+                            <span id="savings" class="text-green-400">€0</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-8 text-center">
-                    <a href="https://www.jobbatical.com/calculators" target="_blank" class="inline-block bg-white text-slate-900 font-bold py-3 px-6 rounded-full hover:bg-blue-400 transition transform hover:scale-105">
+                <div class="mt-10 text-center">
+                    <a href="https://www.jobbatical.com" target="_blank" class="w-full inline-block bg-white text-slate-900 font-bold py-4 px-6 rounded-xl hover:bg-blue-400 transition-all shadow-lg hover:shadow-blue-500/20 active:scale-95">
                         Start your Spain Visa with Jobbatical
                     </a>
                 </div>
             </div>
         </div>
 
-        <div class="mt-12 glass p-8 rounded-2xl">
-            <canvas id="taxChart" height="150"></canvas>
+        <div class="mt-12 glass p-8 rounded-2xl shadow-2xl">
+            <h3 class="text-center text-slate-500 text-sm mb-6 uppercase tracking-widest font-semibold">Tax Liability Comparison</h3>
+            <div class="relative h-64">
+                <canvas id="taxChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
+        let myChart;
+
         function calculateTax() {
+            // Get values safely
             const salary = parseFloat(document.getElementById('salary').value) || 0;
             const foreign = parseFloat(document.getElementById('foreignIncome').value) || 0;
 
-            // 1. Social Security 2026
-            const maxBase =
+            // 1. Social Security (2026 Estimates)
+            const maxBase = 61214; 
+            const ssRate = 0.0665; // Employee part
+            const ssContribution = Math.min(salary, maxBase) * ssRate;
+            
+            // 2. Standard Regime Calculation
+            const taxableBase = Math.max(0, salary - ssContribution - 5550 - 2000);
+            let stdTax = 0;
+            const brackets = [
+                { limit: 12450, rate: 0.19 },
+                { limit: 20200, rate: 0.24 },
+                { limit: 35200, rate: 0.30 },
+                { limit: 60000, rate: 0.37 },
+                { limit: 300000, rate: 0.45 },
+                { limit: Infinity, rate: 0.47 }
+            ];
+
+            let prevLimit = 0;
+            for (const b of brackets) {
+                if (taxableBase > prevLimit) {
+                    const chunk = Math.min(taxableBase, b.limit) - prevLimit;
+                    stdTax += chunk * b.rate;
+                    prevLimit = b.limit;
+                }
+            }
+            const stdForeignTax = foreign * 0.21; // Estimate
+            const stdTotalNet = (salary + foreign) - (stdTax + ssContribution + stdForeignTax);
+
+            // 3. Beckham Law Calculation
+            const beckTax = salary * 0.24;
+            const beckTotalNet = (salary + foreign) - (beckTax + ssContribution);
+
+            // Update DOM
+            document.getElementById('stdNet').innerText = `€${Math.round(stdTotalNet).toLocaleString('de-DE')}`;
+            document.getElementById('beckNet').innerText = `€${Math.round(beckTotalNet).toLocaleString('de-DE')}`;
+            
+            const diff = beckTotalNet - stdTotalNet;
+            const savingsEl = document.getElementById('savings');
+            savingsEl.innerText = `€${Math.round(Math.abs(diff)).toLocaleString('de-DE')}`;
+            
+            const verdict = document.getElementById('verdict');
+            if (diff > 0) {
+                verdict.innerText = "Apply for Beckham Law!";
+                verdict.className = "text-2xl font-bold mb-6 text-green-400";
+                savingsEl.className = "text-green-400";
+            } else {
+                verdict.innerText = "Stick to Standard Regime";
+                verdict.className = "text-2xl font-bold mb-6 text-red-400";
+                savingsEl.className = "text-red-400";
+            }
+
+            // Update Chart with Error Safety
+            try {
+                updateChart(stdTax + stdForeignTax, beckTax);
+            } catch (e) {
+                console.error("Chart could not be updated", e);
+            }
+        }
+
+        function updateChart(std, beck) {
+            const ctx = document.getElementById('taxChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            
+            // Check if Chart.js loaded
+            if (typeof Chart === 'undefined') return;
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Standard Tax', 'Beckham Law Tax'],
+                    datasets: [{
+                        data: [std, beck],
+                        backgroundColor: ['#ef4444', '#3b82f6'],
+                        borderRadius: 10,
+                        barThickness: 60
+                    }]
+                },
+                options: { 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on load
+        window.onload = calculateTax;
+    </script>
+</body>
+</html>
